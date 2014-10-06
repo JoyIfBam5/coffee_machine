@@ -8,7 +8,7 @@ Example was written to demonstrate some valid concepts/techniques like: clean co
 ## Dependencies
 - Gtest
 - Gmock
-- pThreads (only on linux)
+- pThreads (only on Linux)
 - C++11
 
 ## Building
