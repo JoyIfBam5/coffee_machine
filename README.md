@@ -3,7 +3,8 @@
 ## Overview
 
 Coffee Machine is simple Gtest/Gmock presentation based on common and well known example of coffee machine. 
-Example was written to demonstrate some valid concepts/techniques like: clean code, high level logic, OOP, unit testing, mocking, dependency injection.
+Example was written to demonstrate some valid concepts/techniques like: clean code, high level logic, OOP, unit testing, mocking, dependency injection. Some technical details about this project will appear on my blog soon:
+http://nfscpp.blogspot.com
 
 ## Dependencies
 - Gtest
