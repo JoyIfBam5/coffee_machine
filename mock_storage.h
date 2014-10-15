@@ -10,11 +10,14 @@ class mock_storage : public abstract_storage<Key, Value>
 {
 public:
 	 MOCK_METHOD1_T(indexOperator, Value & (const Key &key));
+
 	 virtual Value &operator[](const Key &key)
 	 {
 		 return indexOperator(key);
 	 }
 	 MOCK_CONST_METHOD1_T(find, const std::shared_ptr<Value> (const Key &key));
+
+	 MOCK_CONST_METHOD0_T(convertToMap, std::map<Key, Value> ());
 };
 
 #endif

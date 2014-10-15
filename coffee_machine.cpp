@@ -1,7 +1,8 @@
-#include "exceptions.h"
-#include "coffee_machine.h"
 #include <algorithm>
 #include <cassert>
+
+#include "exceptions.h"
+#include "coffee_machine.h"
 
 std::string coffee_machine::make_coffee(std::string name)
 {
@@ -47,12 +48,12 @@ void coffee_machine::order_coffee(std::string name)
 		unsigned price = manager->get_price(name);
 		user_credit_sum = 0;
 
-		user_credit_sum += ECoin_10gr*user_credit[ECoin_10gr];
-		user_credit_sum += ECoin_20gr*user_credit[ECoin_20gr];
-		user_credit_sum += ECoin_50gr*user_credit[ECoin_50gr];
-		user_credit_sum += ECoin_1zl*user_credit[ECoin_1zl];
-		user_credit_sum += ECoin_2zl*user_credit[ECoin_2zl];
-		user_credit_sum += ECoin_5zl*user_credit[ECoin_5zl];
+		user_credit_sum += ECoin_10gr*(*user_credit)[ECoin_10gr];
+		user_credit_sum += ECoin_20gr*(*user_credit)[ECoin_20gr];
+		user_credit_sum += ECoin_50gr*(*user_credit)[ECoin_50gr];
+		user_credit_sum += ECoin_1zl*(*user_credit)[ECoin_1zl];
+		user_credit_sum += ECoin_2zl*(*user_credit)[ECoin_2zl];
+		user_credit_sum += ECoin_5zl*(*user_credit)[ECoin_5zl];
 
 		if (user_credit_sum >= price)
 		{
@@ -63,18 +64,17 @@ void coffee_machine::order_coffee(std::string name)
 	}
 	else
 		throw value_error();
-
 }
 
 void coffee_machine::insert_coin(ECoin coin)
 {
-	user_credit[coin]++;
+	(*user_credit)[coin]++;
 }
 
 // greedy algorithm is used: begin with the greatest coin
 std::map<ECoin, unsigned> coffee_machine::take_change()
 {
-	auto change = user_credit;
+	auto change = user_credit->convertToMap();
 	if (prepared_coffee != "")
 	{
 		unsigned price = manager->get_price(prepared_coffee);

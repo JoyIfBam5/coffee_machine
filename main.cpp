@@ -1,12 +1,11 @@
-#include "coin.h"
-#include "coffee_machine.h"
-#include "coffee_machine_manager.h"
-
 #include <iostream>
 #include <memory>
 #include <gtest/gtest.h>
 
 #include "storage.h"
+#include "coin.h"
+#include "coffee_machine.h"
+#include "coffee_machine_manager.h"
 
 const storage<EIngredient, unsigned> ingredients  =
 {
@@ -27,10 +26,11 @@ const std::map<EIngredient, unsigned> cappucino =
 void dummy_test_case()
 {
 	std::shared_ptr<abstract_coffee_machine_manager> manager(new coffee_machine_manager());
+	std::shared_ptr<abstract_storage<ECoin, unsigned>> user_credit(new storage<ECoin, unsigned>());
 	manager->set_ingredients(std::make_shared<storage<EIngredient, unsigned>>(ingredients));
 	manager->add_recipe("cappucino", 200, cappucino);
 
-	coffee_machine machine(manager);
+	coffee_machine machine(manager, user_credit);
 	std::map<std::string, unsigned> available_coffees = machine.get_available_coffees();
 	machine.order_coffee("cappucino");
 

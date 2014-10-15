@@ -1,10 +1,11 @@
 #ifndef _STORAGE_
 #define _STORAGE_
 
-#include "abstract_storage.h"
 #include <utility>
 #include <map>
 #include <initializer_list>
+
+#include "abstract_storage.h"
 
 template <class Key, class Value>
 class storage : public abstract_storage<Key, Value>
@@ -29,6 +30,11 @@ public:
 			return nullptr;
 		else
 			return std::make_shared<Value>(iterator_to_element->second);
+	}
+
+	std::map<Key, Value> convertToMap() const
+	{
+		return internal_storage;
 	}
 
 private:

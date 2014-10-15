@@ -4,11 +4,12 @@
 #include <map>
 #include <memory>
 #include <functional>
+#include <assert.h>
 
 #include "coin.h"
 #include "abstract_coffee_machine_manager.h"
 #include "abstract_coffee_machnie.h"
-#include "storage.h"
+#include "abstract_storage.h"
 
 /*!
  * \brief Coffee machine main class
@@ -20,18 +21,21 @@ class coffee_machine : public abstract_coffee_machnie
 {
 public :
 
-	coffee_machine(std::shared_ptr<abstract_coffee_machine_manager> manager_) :
+	coffee_machine(std::shared_ptr<abstract_coffee_machine_manager> manager_,
+				   std::shared_ptr<abstract_storage<ECoin, unsigned>> user_credit_) :
 		manager(manager_),
+		user_credit(user_credit_),
 		prepared_coffee(""),
 		delayed_coffee(""),
 		user_credit_sum(0)
 		{
-			user_credit[ECoin_10gr] = 0;
-			user_credit[ECoin_20gr] = 0;
-			user_credit[ECoin_50gr] = 0;
-			user_credit[ECoin_1zl] = 0;
-			user_credit[ECoin_2zl] = 0;
-			user_credit[ECoin_5zl] = 0;
+			assert(user_credit != nullptr);
+			(*user_credit)[ECoin_10gr] = 0;
+			(*user_credit)[ECoin_20gr] = 0;
+			(*user_credit)[ECoin_50gr] = 0;
+			(*user_credit)[ECoin_1zl] = 0;
+			(*user_credit)[ECoin_2zl] = 0;
+			(*user_credit)[ECoin_5zl] = 0;
 		}
 
 	~coffee_machine() {}
@@ -94,7 +98,8 @@ public :
 
 private:
 	const std::shared_ptr<abstract_coffee_machine_manager> manager;
-	std::map<ECoin, unsigned> user_credit;
+	//std::map<ECoin, unsigned> user_credit;
+	std::shared_ptr<abstract_storage<ECoin, unsigned>> user_credit;
 	std::string prepared_coffee, delayed_coffee;
 	unsigned user_credit_sum;
 };

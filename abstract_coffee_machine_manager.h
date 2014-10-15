@@ -9,8 +9,6 @@
 #include "ingredient.h"
 #include "abstract_storage.h"
 
-// gmock is problematic when encountering commas in return value
-//typedef std::map<EIngredient, unsigned> ingredient_map;
 
 /*!
  * \brief Coffee machine internal interface

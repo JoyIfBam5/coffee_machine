@@ -6,17 +6,21 @@
 #include "mock_storage.h"
 #include "mock_coffee_machine.h"
 #include "exceptions.h"
+#include "storage.h"
 
 /*
 	ROADMAP:
 		1. add more OOP, DI and plugin style a'la Uncle Bob. Refactor tests and add mocks. //DONE
-			* user_credit and change should be injected and mocked
+			* user_credit and change should be injected and mocked // DONE
 			* refactor all tests. Add When/Then. // DONE
-			* port on linux. Check coverage by gcov.
+			* port on linux. Check coverage by gcov. // DONE
 		2. add multithreading <-- HARD :)
 */
 
 /*
+	* "uninteresting mock function call" - we have call mock function in runtime but we havent EXPECT_CALL
+	  "unsatisfied and active" - we have EXPECT_CALL but haven't actual call in runtime
+
 	* mock is derived so it is normal object with all fields and methods (maybe some overriden)
 
 	* mock_manager is std::shared_ptr<mock_coffee_machine_manager> not 
@@ -32,7 +36,7 @@
 	  manager->set_ingredients(std::make_shared<storage<EIngredient, unsigned>>(ingredients));
 	  ref: http//stackoverflow.com/questions/10472848/conversion-from-derived-to-base-exists-but-is-inaccessible
 
-	* mock_storage_ is not injected but all works. Why?
+	* TO DO: mock_storage_ is not injected but all works. Why?
 	* for storage interface I need:
 		-> operator[];
 		-> constructor with initializer_list;
@@ -52,11 +56,35 @@
 	  reimplement/refactor some parts of code only for introducing interfaces or allowing DI. 
 	  Uncle Bob avoids mocking:)
 
+	* decided to use concrete class (not abstract_storage interface) in coffee_machine::take_change and
+	  introduced convertToMap for change
+
+	* source code dependency tells a lot about design. For example coffee machine include lots interfaces which means
+	  it based on dependency inversion principle and use intensively DI. Uncle Bob is happy.
+
+	* insert_coin doesn't use mocked user_credit because I want to test insert_coin. After mocking user_credit
+	  insert_coin is not needed
+
+	* be careful with ReturnRef! Lifetime of coins_and_quantities must exceed
+	  index_operators_from_coffee_machine_constructor scope because reference to coins_and_quantities will be needed for
+	  indexOperator call inside lcoffee_machine constructor -
+	  beyond index_operators_from_coffee_machine_constructor. So static is way to go.
+
 	PORTING ON LINUX:
 
 	* be careful with *.la objects for gtest/gmock. That's libtool files, not static linked libraries (*.a).
 	  I should find right lib-s in hidden lib/.lib :)
 
+	* gcov tutorial
+		- add to *.pro:
+			QMAKE_CXXFLAGS += -fprofile-arcs
+			QMAKE_CXXFLAGS += -ftest-coverage
+			QMAKE_LFLAGS += -fprofile-arcs
+		- build & run
+		- coffee_machine.gcno, coffee_machine.gcda will be created, copy it to folder with sources
+		- gcov coffee_machine.cpp will create detailed report in coffee_machine.cpp.gcov
+
+	TO DO: I should fix DRY in this file.
 */
 
 using namespace testing;
@@ -113,8 +141,20 @@ namespace ut
 
 		}
 
+		void index_operators_from_coffee_machine_constructor()
+		{
+			 static std::vector<std::pair<ECoin, unsigned>> coins_and_quantities =
+				{ { ECoin_10gr, 0 }, { ECoin_20gr, 0 }, { ECoin_50gr, 0 },
+				{ ECoin_1zl, 0 }, { ECoin_2zl, 0 }, { ECoin_5zl, 0 } };
+
+			for (size_t i = 0;i < coins_and_quantities.size(); i++)
+				EXPECT_CALL(*user_credit_, indexOperator(coins_and_quantities[i].first))
+					.WillRepeatedly(ReturnRef(coins_and_quantities[i].second));
+		}
+
 		std::shared_ptr<mock_coffee_machine_manager> mock_manager;
 		std::shared_ptr<mock_storage<EIngredient, unsigned>> mock_storage_;
+		std::shared_ptr<mock_storage<ECoin, unsigned>> user_credit_;
 	};
 
 	TEST_F(coffee_machine_fixture, get_available_coffees_empty)
@@ -122,7 +162,11 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		const coffee_machine lcoffee_machine(mock_manager);
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+
+		const coffee_machine lcoffee_machine(mock_manager, user_credit_);
 		const std::set<std::string> expected_coffees;
 		const std::map<std::string, unsigned> expected_coffees_and_price;
 
@@ -144,7 +188,10 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		const coffee_machine lcoffee_machine(mock_manager);
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+		const coffee_machine lcoffee_machine(mock_manager, user_credit_);
 
 		const std::set<std::string> expected_coffees = 
 			{ "cappucino", "espresso", "some strange coffee" };
@@ -194,7 +241,10 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		const coffee_machine lcoffee_machine(mock_manager);
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+		const coffee_machine lcoffee_machine(mock_manager, user_credit_);
 
 		const std::set<std::string> expected_coffees = { "strong espresso", "cappucino", "espresso", 
 			"some strange coffee" };
@@ -247,7 +297,10 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		const coffee_machine lcoffee_machine(mock_manager);
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+		const coffee_machine lcoffee_machine(mock_manager, user_credit_);
 
 		const std::set<std::string> expected_coffees = { "strong espresso" };
 
@@ -283,7 +336,8 @@ namespace ut
 	{
 		// Given:
 		mock_manager.reset(new mock_coffee_machine_manager());
-		coffee_machine lcoffee_machine(mock_manager);
+		std::shared_ptr<abstract_storage<ECoin, unsigned>> user_credit(new storage<ECoin, unsigned>());
+		coffee_machine lcoffee_machine(mock_manager, user_credit);
 
 		const std::map<ECoin, unsigned> expected_change =
 		{
@@ -310,7 +364,11 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(new mock_coffee_machine(mock_manager));
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(
+					new mock_coffee_machine(mock_manager, user_credit_));
 		const std::map<std::string, unsigned> actual_coffees_and_price;
 
 		// When:
@@ -326,14 +384,29 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(new mock_coffee_machine(mock_manager));
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(
+					new mock_coffee_machine(mock_manager, user_credit_));
 		const std::map<std::string, unsigned> coffee_and_price = { {"espresso", 100} };
+
+		std::vector<std::pair<ECoin, unsigned>> expected_credit_for_order_coffee =
+		{
+			{ ECoin_5zl, 0 }, { ECoin_2zl, 0 }, { ECoin_1zl, 1 },
+			{ ECoin_50gr, 0 }, { ECoin_20gr, 0 }, { ECoin_10gr, 0 }
+		};
 
 		// When:
 		EXPECT_CALL(*lmock_coffee_machine, get_available_coffees())
 			.WillOnce(Return(coffee_and_price));
 		EXPECT_CALL(*mock_manager, get_price("espresso"))
 			.WillOnce(Return(100));
+
+		for (size_t i = 0;i < expected_credit_for_order_coffee.size(); i++)
+			EXPECT_CALL(*user_credit_, indexOperator(expected_credit_for_order_coffee[i].first))
+				.WillRepeatedly(ReturnRef(expected_credit_for_order_coffee[i].second));
+
 		EXPECT_CALL(*lmock_coffee_machine, make_coffee("espresso"))
 			.WillOnce(Return("espresso"));
 
@@ -349,9 +422,21 @@ namespace ut
 	{
 		// Given:
 		mock_manager.reset(new mock_coffee_machine_manager());
-		coffee_machine lcoffee_machine(mock_manager);
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		const std::map<ECoin, unsigned> expected_change =
+		{
+			{ ECoin_5zl, 0 }, { ECoin_2zl, 0 }, { ECoin_1zl, 1 },
+			{ ECoin_50gr, 0 }, { ECoin_20gr, 0 }, { ECoin_10gr, 0 }
+		};
+
+		index_operators_from_coffee_machine_constructor();
+		coffee_machine lcoffee_machine(mock_manager, user_credit_);
 
 		// When:
+		EXPECT_CALL(*user_credit_, convertToMap())
+			.WillOnce(Return(expected_change));
+
 		lcoffee_machine.insert_coin(ECoin_1zl);
 		auto change = lcoffee_machine.take_change();
 
@@ -364,7 +449,11 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(new mock_coffee_machine(mock_manager));
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(
+					new mock_coffee_machine(mock_manager, user_credit_));
 
 		const std::map<std::string, unsigned> available_coffee_and_price = { { "some strange coffee", 101 } };
 
@@ -381,6 +470,8 @@ namespace ut
 		EXPECT_CALL(*mock_manager, get_price("some strange coffee"))
 			.Times(2)
 			.WillRepeatedly(Return(101));
+		EXPECT_CALL(*user_credit_, convertToMap())
+			.WillOnce(Return(expected_change));
 
 		lmock_coffee_machine->insert_coin(ECoin_1zl);
 		lmock_coffee_machine->order_coffee("some strange coffee");
@@ -396,7 +487,11 @@ namespace ut
 		// Given:
 		mock_storage_.reset(new mock_storage<EIngredient, unsigned>());
 		mock_manager.reset(new mock_coffee_machine_manager());
-		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(new mock_coffee_machine(mock_manager));
+		user_credit_.reset(new mock_storage<ECoin, unsigned>());
+
+		index_operators_from_coffee_machine_constructor();
+		std::shared_ptr<mock_coffee_machine> lmock_coffee_machine(
+					new mock_coffee_machine(mock_manager, user_credit_));
 
 		const std::map<std::string, unsigned> available_coffee_and_price = { { "some strange coffee", 70 } };
 
@@ -406,21 +501,28 @@ namespace ut
 			{ ECoin_50gr, 2 }, { ECoin_20gr, 1 }, { ECoin_10gr, 0 }
 		};
 
+		std::vector<std::pair<ECoin, unsigned>> expected_credit_for_order_coffee =
+		{
+			{ ECoin_5zl, 0 }, { ECoin_2zl, 0 }, { ECoin_1zl, 1 },
+			{ ECoin_50gr, 3 }, { ECoin_20gr, 2 }, { ECoin_10gr, 0 }
+		};
+
 		// When:
 		EXPECT_CALL(*lmock_coffee_machine, get_available_coffees())
 			.WillOnce(Return(available_coffee_and_price));
 		EXPECT_CALL(*mock_manager, get_price("some strange coffee"))
 			.Times(2)
 			.WillRepeatedly(Return(70));
+		EXPECT_CALL(*user_credit_, convertToMap())
+			.WillOnce(Return(expected_change));
+
+		for (size_t i = 0;i < expected_credit_for_order_coffee.size(); i++)
+			EXPECT_CALL(*user_credit_, indexOperator(expected_credit_for_order_coffee[i].first))
+				.WillRepeatedly(ReturnRef(expected_credit_for_order_coffee[i].second));
+
 		EXPECT_CALL(*lmock_coffee_machine, make_coffee("some strange coffee"))
 			.WillOnce(Return("some strange coffee"));
 	
-		lmock_coffee_machine->insert_coin(ECoin_1zl);
-		lmock_coffee_machine->insert_coin(ECoin_20gr);
-		lmock_coffee_machine->insert_coin(ECoin_20gr);
-		lmock_coffee_machine->insert_coin(ECoin_50gr);
-		lmock_coffee_machine->insert_coin(ECoin_50gr);
-		lmock_coffee_machine->insert_coin(ECoin_50gr);
 		lmock_coffee_machine->order_coffee("some strange coffee");
 
 		auto actual_change = lmock_coffee_machine->take_change();
@@ -430,5 +532,4 @@ namespace ut
 		EXPECT_EQ(expected_change, actual_change);
 		EXPECT_EQ("some strange coffee", actual_coffee);
 	}
-
 }
