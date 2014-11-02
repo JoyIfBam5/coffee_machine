@@ -27,18 +27,19 @@ void dummy_test_case()
 {
 	std::shared_ptr<abstract_coffee_machine_manager> manager(new coffee_machine_manager());
 	std::shared_ptr<abstract_storage<ECoin, unsigned>> user_credit(new storage<ECoin, unsigned>());
+
 	manager->set_ingredients(std::make_shared<storage<EIngredient, unsigned>>(ingredients));
 	manager->add_recipe("cappucino", 200, cappucino);
 
 	coffee_machine machine(manager, user_credit);
-	std::map<std::string, unsigned> available_coffees = machine.get_available_coffees();
+	auto available_coffees = machine.get_available_coffees();
 	machine.order_coffee("cappucino");
 
 	machine.insert_coin(ECoin_2zl);
 	machine.insert_coin(ECoin_1zl);
 
-	std::string coffee = machine.take_coffee();
-	auto change = machine.take_change();
+	const auto coffee = machine.take_coffee();
+	const auto change = machine.take_change();
 
 	if (coffee != "")
 		std::cout << "I'm drinking wonderful " << coffee << " coffee." << std::endl;

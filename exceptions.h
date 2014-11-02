@@ -25,4 +25,4 @@ class value_error : public std::exception
 	}
 };
 
-#endif // _EXCEPTIONS_H_
+#endif

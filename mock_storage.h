@@ -4,7 +4,6 @@
 #include <gmock/gmock.h>
 #include "abstract_storage.h"
 
-// mocking opeerator? is disallowed, workaround: https//code.google.com/p/googlemock/issues/detail?id=53
 template<class Key, class Value>
 class mock_storage : public abstract_storage<Key, Value>
 {

@@ -11,4 +11,4 @@ enum ECoin
 	ECoin_5zl = 500
 };
 
-#endif // _COINS_H_
+#endif

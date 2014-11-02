@@ -49,4 +49,4 @@ class coffee_machine_manager : public abstract_coffee_machine_manager
 	std::shared_ptr<abstract_storage<EIngredient, unsigned>> ingredients;
 };
 
-#endif // _COFFE_MACHINE_MANAGER_H_
+#endif

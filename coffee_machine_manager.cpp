@@ -5,7 +5,7 @@
 
 unsigned coffee_machine_manager::get_price(const std::string& coffee) const
 {
-	auto found = coffees.find(coffee);
+	const auto found = coffees.find(coffee);
 	if (found != coffees.end()) 
 		return price.at(*found);
 	else 
@@ -14,7 +14,7 @@ unsigned coffee_machine_manager::get_price(const std::string& coffee) const
 
 const std::map<EIngredient, unsigned>& coffee_machine_manager::get_recipe(const std::string& coffee) const
 {
-	auto found = coffees.find(coffee);
+	const auto found = coffees.find(coffee);
 	if (found != coffees.end()) 
 		return recipe.at(*found);
 	else 
@@ -23,14 +23,14 @@ const std::map<EIngredient, unsigned>& coffee_machine_manager::get_recipe(const 
 
 long int coffee_machine_manager::use_ingredient(EIngredient ingredient, unsigned amount)
 {
-	auto found = ingredients->find(ingredient);
+	const auto found = ingredients->find(ingredient);
 	if (found != nullptr) 
 	{
 		if ((*ingredients)[ingredient] >= amount) 
 			return (*ingredients)[ingredient] -= amount;
 		else 
-			return -1; // no sufficient amount
+			return -1;
 	} 
 	else 
-		throw value_error();  // no such ingredient
+		throw value_error();
 }

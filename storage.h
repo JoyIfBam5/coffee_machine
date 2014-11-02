@@ -25,7 +25,7 @@ public:
 
 	const std::shared_ptr<Value> find(const Key &key) const
 	{
-		auto iterator_to_element = internal_storage.find(key);
+		const auto iterator_to_element = internal_storage.find(key);
 		if (iterator_to_element == internal_storage.end())
 			return nullptr;
 		else

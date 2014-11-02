@@ -23,10 +23,11 @@ public :
 
 	coffee_machine(std::shared_ptr<abstract_coffee_machine_manager> manager_,
 				   std::shared_ptr<abstract_storage<ECoin, unsigned>> user_credit_) :
+		no_coffee_available(""),
 		manager(manager_),
 		user_credit(user_credit_),
-		prepared_coffee(""),
-		delayed_coffee(""),
+		prepared_coffee(no_coffee_available),
+		delayed_coffee(no_coffee_available),
 		user_credit_sum(0)
 		{
 			assert(user_credit != nullptr);
@@ -97,11 +98,18 @@ public :
 	std::string make_coffee(std::string name);
 
 private:
+	const std::string no_coffee_available;
 	const std::shared_ptr<abstract_coffee_machine_manager> manager;
-	//std::map<ECoin, unsigned> user_credit;
 	std::shared_ptr<abstract_storage<ECoin, unsigned>> user_credit;
 	std::string prepared_coffee, delayed_coffee;
 	unsigned user_credit_sum;
+
+	bool check_ingredients_availability(
+			const std::map<EIngredient, unsigned>& recipe_for_coffee,
+			const abstract_storage<EIngredient, unsigned>& ingredients) const;
+
+	void compute_change_with_greedy_approach(std::map<ECoin, unsigned> &change,
+											 unsigned &money_to_change);
 };
 
 #endif

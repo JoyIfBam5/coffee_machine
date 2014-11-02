@@ -1,9 +1,9 @@
 #include "gtest/gtest.h"
+#include <memory>
 
 #include "exceptions.h"
 #include "coffee_machine_manager.h"
 #include "storage.h"
-#include <memory>
 
 const storage<EIngredient, unsigned> ingredients =
 {
@@ -21,19 +21,19 @@ const std::map<EIngredient, unsigned> cappucino =
 		{EIngredient_Milk, 50}
 };
 
-//TEST(ut_coffee_machine_manager, set_get_ingredients)
-//{
-//	// Given:
-//	coffee_machine_manager manager;
+TEST(ut_coffee_machine_manager, set_get_ingredients)
+{
+	// Given:
+	coffee_machine_manager manager;
 
-//	// When:
-//	auto shared_ing = std::make_shared<storage<EIngredient, unsigned>>(ingredients);
-//	manager.set_ingredients(shared_ing);
+	// When:
+	const auto wrapped_ingredients =
+			std::make_shared<storage<EIngredient, unsigned>>(ingredients);
+	manager.set_ingredients(wrapped_ingredients);
 
-//	// Then:
-//	auto foo = static_cast<std::shared_ptr<abstract_storage<EIngredient, unsigned>>>(shared_ing);
-//	EXPECT_EQ(manager.get_ingredients(),  *foo);
-//}
+	// Then:
+	EXPECT_EQ(ingredients.convertToMap(), manager.get_ingredients().convertToMap());
+}
 
 TEST(ut_coffee_machine_manager, add_recipe)
 {
@@ -45,9 +45,9 @@ TEST(ut_coffee_machine_manager, add_recipe)
 	manager.add_recipe("cappucino", 250u, cappucino);
 
 	// Then:
-	EXPECT_EQ(manager.get_coffees(), coffees);
-	EXPECT_EQ(manager.get_price("cappucino"), 250u);
-	EXPECT_EQ(manager.get_recipe("cappucino"), cappucino);
+	EXPECT_EQ(coffees, manager.get_coffees());
+	EXPECT_EQ(250u, manager.get_price("cappucino"));
+	EXPECT_EQ(cappucino, manager.get_recipe("cappucino"));
 }
 
 TEST(ut_coffee_machine_manager, get_price_ok)
@@ -57,16 +57,16 @@ TEST(ut_coffee_machine_manager, get_price_ok)
 	manager.add_recipe("cappucino", 250u, cappucino);
 
 	// When:
-	unsigned price = manager.get_price("cappucino");
+	const unsigned price = manager.get_price("cappucino");
 
 	// Then:
-	EXPECT_EQ(price, 250u);
+	EXPECT_EQ(250u, price);
 }
 
 TEST(ut_coffee_machine_manager, get_price_nok)
 {
 	// Given:
-	coffee_machine_manager manager;
+	const coffee_machine_manager manager;
 
 	// When/Then:
 	EXPECT_THROW(manager.get_price("cappucino"), value_error);
@@ -79,16 +79,16 @@ TEST(ut_coffee_machine_manager, get_recipe_ok)
 	manager.add_recipe("cappucino", 250u, cappucino);
 
 	// When:
-	std::map<EIngredient, unsigned> recipe = manager.get_recipe("cappucino");
+	const auto recipe = manager.get_recipe("cappucino");
 
 	// Then:
-	EXPECT_EQ(recipe, cappucino);
+	EXPECT_EQ(cappucino, recipe);
 }
 
 TEST(ut_coffee_machine_manager, get_recipe_nok)
 {
 	// Given:
-	coffee_machine_manager manager;
+	const coffee_machine_manager manager;
 
 	// When/Then:
 	EXPECT_THROW(manager.get_recipe("cappucino"), value_error);

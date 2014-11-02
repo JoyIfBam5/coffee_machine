@@ -63,12 +63,14 @@ public :
 	 *
 	 * 1) >0 if operation succeeded
 	 * 2) 0 if operation succeeded, but there is no more ingredient left
-	 * 3) -1 if operation failed
+	 * 3) -1 if operation failed (no sufficient amount)
 	 *
 	 * \param ingredient Ingredient to be used
 	 * \param amount Amount of ingredient to be used
+	 *
+	 * throws value_error if ingredient is not found
 	 */
 	virtual long int use_ingredient(EIngredient ingredient, unsigned amount) = 0;
 };
 
-#endif // _ABSTRACT_COFFE_MACHINE_MANAGER_H_
+#endif
