@@ -33,18 +33,30 @@ void dummy_test_case()
 
 	coffee_machine machine(manager, user_credit);
 	auto available_coffees = machine.get_available_coffees();
+	std::cout << "Available coffee:\n";
+	for (auto coffee : available_coffees) {
+		std::cout << "\t" << coffee.first << " : " << coffee.second << std::endl;
+	}
 	machine.order_coffee("cappucino");
 
 	machine.insert_coin(ECoin_2zl);
 	machine.insert_coin(ECoin_1zl);
+	std::cout << "Paid: " << ECoin_2zl + ECoin_1zl << std::endl;
 
 	const auto coffee = machine.take_coffee();
 	const auto change = machine.take_change();
 
-	if (coffee != "")
+	if (coffee != "") {
 		std::cout << "I'm drinking wonderful " << coffee << " coffee." << std::endl;
-	else
+		unsigned total_change = 0;
+		for (auto coin : change) {
+			total_change += coin.first * coin.second;
+		}
+		std::cout << "My change is " << total_change << std::endl;
+    }
+	else {
 		std::cout << "Hmm, I guess coffee machine has broken..." << std::endl;
+	}
 }
 
 int main(int argc, char **argv)

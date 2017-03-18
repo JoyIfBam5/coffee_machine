@@ -374,7 +374,7 @@ namespace ut
 		auto change = lcoffee_machine.take_change();
 
 		// Then:
-		EXPECT_EQ(1, change[ECoin_1zl]);
+		EXPECT_EQ(1u, change[ECoin_1zl]);
 	}
 
 	TEST_F(coffee_machine_fixture, take_change_is_available_not_enaugh_cash)
